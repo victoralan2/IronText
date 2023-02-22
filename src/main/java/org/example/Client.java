@@ -19,19 +19,19 @@ public class Client {
     public void startConnection() throws IOException {
         Socket clientSocket = new Socket(host, port);
         output = new DataOutputStream(clientSocket.getOutputStream());
-        tokenAuth();
+        passwordAuth();
     }
 
     private void tokenAuth() throws IOException {
         output.writeInt(0);
-        output.writeUTF("02SXceGHBJIVdNMNkfoZxz50Lq8BzsEf");
+        output.writeUTF("9WWfhd8vnu8yygxcdCRZSStjFemd9psL");
     }
     private void passwordAuth() throws IOException {
         output.writeInt(1);
         //email
-        output.writeUTF("vicvarcas2a007@gmail.com");
+        output.writeUTF("mariogandia55@gmail.com");
         //password
-        output.writeUTF("Proyecto103");
+        output.writeUTF("ILoveJava55");
     }
     private void registerAcc()throws IOException {
         output.writeInt(2);
