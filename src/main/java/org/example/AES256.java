@@ -12,14 +12,14 @@ import java.util.Random;
 
 public class AES256 {
     public static String encryptAES256(String key, String message, String seed) throws Exception {
+        // Instance of the hasher for hashing the key 
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+        // Conver the key / password to a sha256 hash as bytes.
         byte[] keyBytes = Arrays.copyOf(sha256.digest(key.getBytes(StandardCharsets.UTF_8)), 32);
-
+        // Generate the iv using the seed
         byte[] iv = new byte[16];
-        int intSeed = 0;
-        for(Character character : seed.toCharArray()){
-            intSeed += character.hashCode();
-        }
+        // convert seed to a integer
+        seed = getHashCode(seed);
 
         Random random = new Random(intSeed);
 
@@ -36,5 +36,15 @@ public class AES256 {
         System.arraycopy(encrypted, 0, encryptedWithIv, iv.length, encrypted.length);
 
         return Base64.getEncoder().encodeToString(encryptedWithIv);
+    }
+    public static int getHashCode(String string){
+        Hasher hasher = new Hasher("SHA256");
+        String code = "";
+        for (Character character : hasher.hashString(string)){
+            if (character.isDigit()){
+                code+=character;
+            }
+        }
+        return Integer.parseInt(code);
     }
 }
