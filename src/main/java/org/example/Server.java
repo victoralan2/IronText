@@ -21,7 +21,7 @@ public class Server {
 
     private final String host;
 
-    private final String pepper = "";
+    private final String pepper = "d88185c247d598612028529c71395a583638a3bec4eca632da0969177d78a30c";
     private final int port;
     private final SQL sqlDB = new SQL();
     private HashMap<UUID, Socket> connections = new HashMap<>();
