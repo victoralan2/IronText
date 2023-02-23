@@ -5,6 +5,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -19,7 +20,7 @@ public class AES256 {
         // Generate the iv using the seed
         byte[] iv = new byte[16];
         // convert seed to a integer
-        seed = getHashCode(seed);
+        int intSeed = getHashCode(seed);
 
         Random random = new Random(intSeed);
 
@@ -38,13 +39,19 @@ public class AES256 {
         return Base64.getEncoder().encodeToString(encryptedWithIv);
     }
     public static int getHashCode(String string){
-        Hasher hasher = new Hasher("SHA256");
-        String code = "";
-        for (Character character : hasher.hashString(string)){
-            if (character.isDigit()){
-                code+=character;
+        try {
+            Hasher hasher = new Hasher("SHA-256");
+            StringBuilder code = new StringBuilder();
+            for (Character character : hasher.hashString(string).toCharArray()){
+                if (Character.isDigit(character)){
+                    code.append(character);
+                }
             }
+            return Integer.parseInt(code.toString());
+        } catch (NoSuchAlgorithmException e){
+            e.printStackTrace();
         }
-        return Integer.parseInt(code);
+        return 0;
     }
+
 }
