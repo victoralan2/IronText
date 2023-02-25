@@ -1,12 +1,25 @@
 package org.example;
 
-import java.io.IOException;
-
 public class Main {
     public static void main(String[] args) throws Exception {
-        Server server = new Server("localhost", 2918);
-        server.startServer();
-        Client client = new Client("localhost", 2918);
-        client.startConnection();
+
+
+        try {
+            Server server = new Server("localhost", 2918);
+            new Thread(() ->{
+                try {
+                    server.startServer();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }).start();
+
+
+            Client client2 = new Client("localhost", 2918);
+            client2.startConnection();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

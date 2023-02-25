@@ -1,0 +1,115 @@
+package org.example;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.channels.Selector;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.util.*;
+
+public class PacketManager extends Thread{
+	public Selector selector;
+	private ServerSocket server;
+	private Socket clientSocket;
+	private SQL sqlDB;
+	private UUID clientUUID;
+	private EventManager eventManager;
+
+	public PacketManager(ServerSocket server, SQL sqlDB, Socket clientSocket, UUID clientUUID, EventManager eventManager){
+		this.eventManager = eventManager;
+		this.server = server;
+		this.clientSocket = clientSocket;
+		this.sqlDB = sqlDB;
+		this.clientUUID = clientUUID;
+	}
+
+	@Override
+	public void run(){
+		while (!clientSocket.isClosed()){
+			try{
+				DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
+				DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+				int requestType = input.readInt();
+				// 0 = SEND MESSAGE | 1 = GET LAST x MESSAGES
+				if (requestType == 0){
+					String message = input.readUTF();
+
+					BadWordFilter badWordFilter = new BadWordFilter();
+					ArrayList<String> badWords = badWordFilter.filter(message);
+					System.out.println(badWords.size());
+					if (!badWords.isEmpty()){
+						if (badWords.size() >= message.split(" ").length / 15 - 1){
+							System.out.println("inapropiated word detected: " + Arrays.toString(badWords.toArray()));
+							output.writeInt(MessageExitCodes.INAPPROPRIATE_WORD);
+							return;
+						}
+					}
+
+					// Add message to the database
+					PreparedStatement insertMessagePS = sqlDB.prepareStatement("INSERT INTO messages VALUES(?, ?, ?, ?);");
+					insertMessagePS.setString(1, UUID.randomUUID().toString());
+					insertMessagePS.setString(2, message);
+					insertMessagePS.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+					insertMessagePS.setString(4, clientUUID.toString());
+					insertMessagePS.executeUpdate();
+
+					// Get the sender data
+					PreparedStatement userDataPS = sqlDB.prepareStatement("SELECT * FROM users WHERE uuid = ?");
+					userDataPS.setString(1, clientUUID.toString());
+					ResultSet userData = userDataPS.executeQuery();
+					userData.next();
+
+					// Send the message
+					eventManager.publish(requestType, message, userData.getString("username"), System.currentTimeMillis());
+				} else if (requestType == 1){
+					int numbOfMessages = input.readInt();
+					if (numbOfMessages >= 100){
+						output.writeInt(MessageExitCodes.TO_MANY_MESSAGES);
+					}
+					PreparedStatement getMessagesPS = sqlDB.prepareStatement("SELECT * FROM messages LIMIT ?");
+					getMessagesPS.setInt(1, numbOfMessages);
+					ResultSet messagesRows = getMessagesPS.executeQuery();
+					int rows = 0;
+					while (messagesRows.next()){
+						rows++;
+					}
+					// Tells the client how many we are going to send
+					output.writeInt(requestType);
+					output.writeInt(rows);
+
+					// Goes to the beginning of the table
+					messagesRows.first();
+					// starts sending rows
+					for (int i = 0; i < rows; i++) {
+						sendTo(clientSocket, 1, messagesRows.getString("message_content"), messagesRows.getString("username"), messagesRows.getTimestamp("message_date").getTime());
+						messagesRows.next();
+					}
+				}
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	public static void sendTo(Socket client, int requestType, Object... dataList)  {
+		try {
+			DataOutputStream output = new DataOutputStream(client.getOutputStream());
+			output.writeInt(requestType);
+			for (Object data : dataList){
+				if (data instanceof String || data instanceof UUID){
+					output.writeUTF(data.toString());
+				} else if (data instanceof Integer) {
+					output.writeInt(((Integer) data));
+				} else if (data instanceof Long) {
+					output.writeLong(((Long) data));
+				} else if (data instanceof Boolean) {
+					output.writeBoolean(((Boolean) data));
+				}
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+}
