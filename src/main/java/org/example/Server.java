@@ -52,7 +52,6 @@ public class Server {
                         if (authType == 0){
                             System.out.println("CLINT SELECTED TOKEN AUTH");
                             String token = input.readUTF();
-                            token = token.replace("\"", "").replace("'", "");
                             if(token.length() != 32) {
                                 output.writeInt(AuthExitCodes.TOKEN_NOT_VALID);
                                 clientSocket.close();

@@ -41,8 +41,8 @@ public class PacketManager extends Thread{
 					ArrayList<String> badWords = badWordFilter.filter(message);
 					System.out.println(badWords.size());
 					if (!badWords.isEmpty()){
-						if (badWords.size() >= message.split(" ").length / 15 - 1){
-							System.out.println("inapropiated word detected: " + Arrays.toString(badWords.toArray()));
+						if (badWords.size() >= message.split(" ").length / 5 - 1){
+							System.out.println("inappropriate word detected: " + Arrays.toString(badWords.toArray()));
 							output.writeInt(MessageExitCodes.INAPPROPRIATE_WORD);
 							return;
 						}
@@ -69,22 +69,25 @@ public class PacketManager extends Thread{
 					if (numbOfMessages >= 100){
 						output.writeInt(MessageExitCodes.TO_MANY_MESSAGES);
 					}
-					PreparedStatement getMessagesPS = sqlDB.prepareStatement("SELECT * FROM messages LIMIT ?");
+					PreparedStatement getCountPS = sqlDB.prepareStatement("SELECT COUNT(*) FROM messages ORDER BY message_date DESC LIMIT ?;");
+					PreparedStatement getMessagesPS = sqlDB.prepareStatement("SELECT * FROM messages INNER JOIN users ORDER BY message_date DESC LIMIT ?;");
 					getMessagesPS.setInt(1, numbOfMessages);
+					getCountPS.setInt(1, numbOfMessages);
+					ResultSet countOfRows = getCountPS.executeQuery();
+					countOfRows.next();
+					int rows = countOfRows.getInt(1);
 					ResultSet messagesRows = getMessagesPS.executeQuery();
-					int rows = 0;
-					while (messagesRows.next()){
-						rows++;
-					}
+
 					// Tells the client how many we are going to send
 					output.writeInt(requestType);
 					output.writeInt(rows);
 
-					// Goes to the beginning of the table
-					messagesRows.first();
+					messagesRows.next();
+
+
 					// starts sending rows
 					for (int i = 0; i < rows; i++) {
-						sendTo(clientSocket, 1, messagesRows.getString("message_content"), messagesRows.getString("username"), messagesRows.getTimestamp("message_date").getTime());
+						sendTo(clientSocket, -1, messagesRows.getString("message_content"), messagesRows.getString("username"), messagesRows.getTimestamp("message_date").getTime());
 						messagesRows.next();
 					}
 				}
@@ -96,7 +99,11 @@ public class PacketManager extends Thread{
 	public static void sendTo(Socket client, int requestType, Object... dataList)  {
 		try {
 			DataOutputStream output = new DataOutputStream(client.getOutputStream());
-			output.writeInt(requestType);
+
+			// Check if requestType is needed
+			if (requestType != -1)
+				output.writeInt(requestType);
+
 			for (Object data : dataList){
 				if (data instanceof String || data instanceof UUID){
 					output.writeUTF(data.toString());

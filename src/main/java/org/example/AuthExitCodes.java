@@ -12,6 +12,4 @@ public class AuthExitCodes {
     public static final int EMAIL_TAKEN = 302;
     public static final int INVALID_USERNAME = 400;
     public static final int USERNAME_TAKEN = 400;
-
-
 }

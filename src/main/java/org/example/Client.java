@@ -10,7 +10,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.UUID;
 
 public class Client {
@@ -25,7 +28,6 @@ public class Client {
         this.host = host;
         this.port = port;
     }
-
 
     public void startConnection() throws Exception {
         Socket socket = new Socket(host, port);
@@ -43,7 +45,8 @@ public class Client {
         if (resultCode == 0){
             awaitForPacket();
             Thread.sleep(1000);
-            sendEvent(0, socket, "messages");
+            System.out.println("sending request");
+            sendEvent(1, socket, 10);
         }
     }
     private void passwordAuth() throws Exception {
@@ -60,7 +63,7 @@ public class Client {
 
             awaitForPacket();
             Thread.sleep(1000);
-            sendEvent(0, socket, "message");
+            sendEvent(1, socket, "message");
         }
 
     }
@@ -98,7 +101,6 @@ public class Client {
 
                     } else if (requestType == 1){
                         int amountOfRows = input.readInt();
-                        requestType = input.readInt();
                         ArrayList<Message> messages = new ArrayList<>();
                         for (int i = 0; i < amountOfRows; i++) {
                             String content = input.readUTF();
@@ -108,10 +110,12 @@ public class Client {
                             messages.add(currentMessage);
                         }
                         for (Message message : messages){
-                            System.out.println(message.getContent());
-
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String formattedDate = sdf.format(new Date(message.getTimestamp()));
+                            System.out.println("MESSAGE: '" +message.getContent() +"' BY: '" + message.getSender() + "' ON: " + formattedDate);
                         }
                     }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

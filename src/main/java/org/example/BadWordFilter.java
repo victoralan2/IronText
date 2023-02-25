@@ -36,6 +36,7 @@ public class BadWordFilter {
 	private ArrayList<String> loadWords() throws FileNotFoundException {
 		File dir = new File("C:\\Users\\Usuario\\IdeaProjects\\MessagingAppServer\\src\\main\\resources\\BadWordList\\");
 		ArrayList<String> wordList = new ArrayList<>();
+
 		for (File file :  dir.listFiles()){
 			Scanner scanner = new Scanner(file);
 			while (scanner.hasNextLine()){
@@ -56,36 +57,6 @@ public class BadWordFilter {
 		message = message.replaceAll("7","t");
 		message = message.replaceAll("0","o");
 		message = message.replaceAll("9","g");
-
-
-		message = message.replaceAll("à","a");
-		message = message.replaceAll("á","a");
-		message = message.replaceAll("ä","a");
-		message = message.replaceAll("â","a");
-
-
-		message = message.replaceAll("è","e");
-		message = message.replaceAll("é","e");
-		message = message.replaceAll("ë","e");
-		message = message.replaceAll("ê","e");
-
-
-		message = message.replaceAll("í","i");
-		message = message.replaceAll("ì","i");
-		message = message.replaceAll("ï","i");
-		message = message.replaceAll("î","i");
-
-
-		message = message.replaceAll("ò","o");
-		message = message.replaceAll("ó","o");
-		message = message.replaceAll("ö","o");
-		message = message.replaceAll("ô","o");
-
-
-		message = message.replaceAll("ú","u");
-		message = message.replaceAll("ù","u");
-		message = message.replaceAll("ü","u");
-		message = message.replaceAll("û","u");
 
 
 		message = message.replaceAll("[^a-zA-Z]", "");
