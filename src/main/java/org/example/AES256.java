@@ -6,7 +6,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
@@ -44,10 +43,11 @@ public class AES256 {
             StringBuilder code = new StringBuilder();
             for (Character character : hasher.hashString(string).toCharArray()){
                 if (Character.isDigit(character)){
+                    if (character == '0') continue;
                     code.append(character);
                 }
             }
-            return Integer.parseInt(code.toString());
+            return Integer.parseInt(code.substring(0, 8));
         } catch (NoSuchAlgorithmException e){
             e.printStackTrace();
         }
