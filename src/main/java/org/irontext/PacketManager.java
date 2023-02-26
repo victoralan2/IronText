@@ -1,22 +1,22 @@
 package org.irontext;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.Selector;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.*;
 
 public class PacketManager extends Thread{
-	public Selector selector;
 	private ServerSocket server;
 	private Socket clientSocket;
 	private SQL sqlDB;
 	private UUID clientUUID;
 	private EventManager eventManager;
+
 
 	public PacketManager(ServerSocket server, SQL sqlDB, Socket clientSocket, UUID clientUUID, EventManager eventManager){
 		this.eventManager = eventManager;
@@ -39,7 +39,8 @@ public class PacketManager extends Thread{
 
 					BadWordFilter badWordFilter = new BadWordFilter();
 					ArrayList<String> badWords = badWordFilter.filter(message);
-					System.out.println(badWords.size());
+					System.out.println(message);
+
 					if (!badWords.isEmpty()){
 						if (badWords.size() >= message.split(" ").length / 5 - 1){
 							System.out.println("inappropriate word detected: " + Arrays.toString(badWords.toArray()));
@@ -76,17 +77,20 @@ public class PacketManager extends Thread{
 					ResultSet countOfRows = getCountPS.executeQuery();
 					countOfRows.next();
 					int rows = countOfRows.getInt(1);
+					if (rows > numbOfMessages){
+						rows = numbOfMessages;
+					}
 					ResultSet messagesRows = getMessagesPS.executeQuery();
 
 					// Tells the client how many we are going to send
 					output.writeInt(requestType);
 					output.writeInt(rows);
-
+					System.out.println(rows);
 					messagesRows.next();
 
 
 					// starts sending rows
-					for (int i = 0; i < rows; i++) {
+					for (int i = 1; i <= rows; i++) {
 						sendTo(clientSocket, -1, messagesRows.getString("message_content"), messagesRows.getString("username"), messagesRows.getTimestamp("message_date").getTime());
 						messagesRows.next();
 					}
