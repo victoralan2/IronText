@@ -1,6 +1,9 @@
 package org.irontext;
 
 
+import org.irontext.encryption.AES256;
+import org.irontext.encryption.Hasher;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -78,6 +81,12 @@ public class Server {
                                         return;
                                     } else {
                                         // Logged in with token
+                                        if (connections.containsKey(data.getString("uuid"))){
+                                            output.writeInt(AuthExitCodes.ALREADY_LOGGED_IN);
+                                            clientSocket.close();
+                                            return;
+                                        }
+
                                         connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
 
                                         output.writeInt(AuthExitCodes.SUCCESS);
@@ -137,11 +146,16 @@ public class Server {
                                     updateTokenPS.setTimestamp(2, date);
                                     updateTokenPS.setString(3, data.getString("uuid"));
                                 }
+                                if (connections.containsKey(data.getString("uuid"))){
+                                    output.writeInt(AuthExitCodes.ALREADY_LOGGED_IN);
+                                    clientSocket.close();
+                                    return;
+                                }
+                                connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
 
                                 output.writeInt(AuthExitCodes.SUCCESS);
                                 output.writeUTF(newToken);
 
-                                connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
                                 eventManager.subscribe(clientSocket);
                                 PacketManager packetManager = new PacketManager(this.serverSocket, sqlDB, clientSocket, UUID.fromString(data.getString("uuid")), eventManager);
                                 Thread requestHandlerThread = new Thread(packetManager);
