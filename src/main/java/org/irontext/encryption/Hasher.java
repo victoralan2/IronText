@@ -1,4 +1,4 @@
-package org.irontext;
+package org.irontext.encryption;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
