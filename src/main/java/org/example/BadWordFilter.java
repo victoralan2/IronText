@@ -1,4 +1,4 @@
-package org.example;
+package org.irontext;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,7 +34,7 @@ public class BadWordFilter {
 	}
 
 	private ArrayList<String> loadWords() throws FileNotFoundException {
-		File dir = new File("C:\\Users\\Usuario\\IdeaProjects\\MessagingAppServer\\src\\main\\resources\\BadWordList\\");
+		File dir = new File(getClass().getResource("BadWordList/").getFile());
 		ArrayList<String> wordList = new ArrayList<>();
 
 		for (File file :  dir.listFiles()){
