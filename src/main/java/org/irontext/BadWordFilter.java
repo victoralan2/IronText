@@ -15,14 +15,14 @@ public class BadWordFilter {
 		// load word list
 		ArrayList<String> badWords = new ArrayList<>();
 		try { badWords = loadWords(); } catch (Exception exception){ exception.printStackTrace();}
-		message = clearMessage(message);
+		clearMessage(message);
 		ArrayList<String> detectedWords = new ArrayList<>();
 
 		for (String word : badWords){
 
-			word = clearMessage(word);
-			if (word == " " || word == "" || word == "\n"){
-				System.out.println(word);
+			clearMessage(word);
+			if (word == null){
+				continue;
 			}
  			if (message.contains(" " + word + " ") || message.startsWith(word + " ") || message.endsWith(" "+ word)){
 				detectedWords.add(word);
@@ -64,7 +64,7 @@ public class BadWordFilter {
 		}
 		return wordList;
 	}
-	private String clearMessage(String message){
+	private void clearMessage(String message){
 		message = message.toLowerCase();
 
 		message = message.replaceAll("1","i");
@@ -80,6 +80,5 @@ public class BadWordFilter {
 
 
 		message = message.replaceAll("[^a-zA-Z ]", "");
-		return message;
 	}
 }
