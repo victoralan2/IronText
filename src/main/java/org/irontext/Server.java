@@ -9,8 +9,7 @@ import org.irontext.encryption.RSA;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -36,13 +35,13 @@ public class Server {
     }
 
     public void startServer() throws Exception{
-        System.out.println("SERVER HAS STARTED");
         serverSocket = new ServerSocket(port);
+        System.out.println("SERVER HAS STARTED");
 
 
         while (true){
             try {
-
+                System.out.println("WAITING FOR CLIENT");
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("A client has joined");
 
@@ -53,15 +52,12 @@ public class Server {
                         DataInputStream input = new DataInputStream(clientSocket.getInputStream());
                         DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 
-                        // Start negotiating RSA key:
-
-
                         int authType = input.readInt();
 
                         // 0 = token logging | 1 = email-password logging | 3 = register-account
 
                         if (authType == 0){
-                            System.out.println("CLINT SELECTED TOKEN AUTH");
+                            System.out.println("CLIENT SELECTED TOKEN AUTH");
                             String token = input.readUTF();
                             if(token.length() != 32) {
                                 output.writeInt(AuthExitCodes.TOKEN_NOT_VALID);
@@ -112,7 +108,7 @@ public class Server {
 
 
                         } else if (authType == 1){
-                            System.out.println("CLINT SELECTED PASSWORD VERIFICATION");
+                            System.out.println("CLIENT SELECTED PASSWORD VERIFICATION");
                             //password logging
                             Hasher sha256Hasher = new Hasher("SHA256");
                             Hasher bcryptHasher = new Hasher("bcrypt");
@@ -120,7 +116,9 @@ public class Server {
                             // Reading email and password
                             String email = input.readUTF();
                             String password = input.readUTF();
+                            System.out.println("EMAIL:" + email);
 
+                            System.out.println("PASS:" + password);
                             // Selecting the password_salt to verify the passworrd
                             PreparedStatement dataPS = sqlDB.prepareStatement("SELECT * FROM users WHERE email = ?;");
                             dataPS.setString(1, email);
@@ -170,13 +168,14 @@ public class Server {
                                 requestHandlerThread.start();
 
                             } else {
+                                System.out.println("PASSWORD WAS INCORRECT");
                                 output.writeInt(AuthExitCodes.INCORRECT_PASSWORD);
                                 clientSocket.close();
                                 return;
                             }
 
                         } else {
-                            System.out.println("CLINT WANTS TO CREATE AN ACCOUNT");
+                            System.out.println("CLIENT WANTS TO CREATE AN ACCOUNT");
 
                             // Registration
                             Hasher sha256Hasher = new Hasher("SHA256");
