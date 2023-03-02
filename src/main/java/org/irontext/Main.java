@@ -1,34 +1,47 @@
 package org.irontext;
 
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        BadWordFilter wordFilter = new BadWordFilter();
-        System.out.println("HELLO WORD!");
-        Thread.sleep(10000);
 
         try {
-            System.out.println(wordFilter.filter("hello word! BITCH FUCK YOU"));
+            Server server = new Server("localhost", 2918);
+            new Thread(() ->{
+                try {
+                    server.startServer();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }).start();
+
+
+            Client client = new Client("localhost", 2918);
+            new Thread(()->{
+                try {
+                    client.startConnection(1);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+            Client client2 = new Client("localhost", 2918);
+            new Thread(()->{
+                try {
+                    client2.startConnection(2);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+            Client client3 = new Client("localhost", 2918);
+            new Thread(()->{
+                try {
+                    client3.startConnection(3);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
         } catch (Exception e){
             e.printStackTrace();
         }
-        Thread.sleep(1000);
-//
-//        try {
-//            Server server = new Server("localhost", 2918);
-//            new Thread(() ->{
-//                try {
-//                    server.startServer();
-//                } catch (Exception e) {
-//                    throw new RuntimeException(e);
-//                }
-//
-//            }).start();
-//
-//
-//            Client client2 = new Client("localhost", 2918);
-//            client2.startConnection();
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
     }
 }
