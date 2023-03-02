@@ -28,7 +28,7 @@ public class PacketManager extends Thread{
 
 	@Override
 	public void run(){
-		while (!clientSocket.isClosed()){
+		while (!clientSocket.isClosed() && !clientSocket.isConnected()){
 			try{
 				DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 				DataInputStream input = new DataInputStream(clientSocket.getInputStream());
