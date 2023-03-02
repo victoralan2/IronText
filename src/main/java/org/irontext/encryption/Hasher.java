@@ -60,7 +60,6 @@ public class Hasher {
 
     public String hashString(String input, String saltSeed) {
         int log_rounds = 10; // the number of BCRYPT rounds to use (10 is a good default)
-        System.out.println("saltedSEED:" + saltSeed);
         Random random = new Random();
         random.setSeed(saltSeed.hashCode());
         StringBuffer rs = new StringBuffer();
@@ -79,7 +78,6 @@ public class Hasher {
             rs.append(encode_base64(rnd, rnd.length));
             rs.toString();
         }
-        System.out.println("SALT ENCRYPT:" + rs);
         return BCrypt.hashpw(input, rs.toString()); // hash the input string with the salt
     }
     public String hashString(String input) throws NoSuchAlgorithmException {
