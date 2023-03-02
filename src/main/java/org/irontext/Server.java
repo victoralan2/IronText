@@ -2,7 +2,9 @@ package org.irontext;
 
 
 import org.irontext.encryption.AES256;
+import org.irontext.encryption.ExtremeRandom;
 import org.irontext.encryption.Hasher;
+import org.irontext.encryption.RSA;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -14,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 public class Server {
@@ -26,7 +29,7 @@ public class Server {
     public final int port;
     public final SQL sqlDB = new SQL();
     public static final HashMap<UUID, Socket> connections = new HashMap<>();
-
+    public static final HashMap<UUID, RSA> rsaEncryption = new HashMap<>();
     public Server(String host, int port){
         this.host = host;
         this.port = port;
@@ -43,11 +46,16 @@ public class Server {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("A client has joined");
 
+
                 clientSocket.setKeepAlive(true);
                 new Thread( () -> {
                     try {
                         DataInputStream input = new DataInputStream(clientSocket.getInputStream());
                         DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
+
+                        // Start negotiating RSA key:
+
+
                         int authType = input.readInt();
 
                         // 0 = token logging | 1 = email-password logging | 3 = register-account
