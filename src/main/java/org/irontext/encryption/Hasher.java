@@ -1,6 +1,5 @@
 package org.irontext.encryption;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
