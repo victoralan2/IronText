@@ -33,8 +33,11 @@ public class PacketManager extends Thread{
 				DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 				DataInputStream input = new DataInputStream(clientSocket.getInputStream());
 				int requestType = input.readInt();
-				// 0 = SEND MESSAGE | 1 = GET LAST x MESSAGES
-				if (requestType == 0){
+				// -1 = UNSUBSCRIBE | 0 = SEND MESSAGE | 1 = GET LAST x MESSAGES
+
+				if (requestType == -1){
+					Main.server.eventManager.unSubscribe(clientSocket);
+				} else if (requestType == 0){
 					String message = input.readUTF();
 
 					BadWordFilter badWordFilter = new BadWordFilter();
@@ -48,7 +51,6 @@ public class PacketManager extends Thread{
 							return;
 						}
 					}
-
 					// Add message to the database
 					PreparedStatement insertMessagePS = sqlDB.prepareStatement("INSERT INTO messages VALUES(?, ?, ?, ?);");
 					insertMessagePS.setString(1, UUID.randomUUID().toString());

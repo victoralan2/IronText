@@ -1,6 +1,7 @@
 package org.irontext;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -30,7 +31,9 @@ public class EventManager {
 		}
 		subscribers.add(subscriber);
 	}
-
+	public void unSubscribe(Socket subscriber){
+		subscribers.remove(subscriber);
+	}
 	// BROADCASTS TO EVERY SUBSCRIBER THE DATA
 	public void publish(int requestType, Object... dataList)  {
 		for (Socket subscriber : subscribers){
@@ -48,7 +51,7 @@ public class EventManager {
 						output.writeBoolean(((Boolean) data));
 					}
 				}
-			} catch (Exception e){
+			} catch (IOException e){
 				e.printStackTrace();
 			}
 		}
