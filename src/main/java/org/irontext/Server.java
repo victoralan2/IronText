@@ -53,19 +53,25 @@ public class Server {
                         DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 
                         int authType = input.readInt();
-
+                        System.out.println(authType);
                         // 0 = token logging | 1 = email-password logging | 3 = register-account
 
                         if (authType == 0){
                             System.out.println("CLIENT SELECTED TOKEN AUTH");
+                            String email = input.readUTF();
                             String token = input.readUTF();
+
+                            System.out.println("TOKEN: " + token);
+                            System.out.println("EMAIL: " + email);
+
                             if(token.length() != 32) {
                                 output.writeInt(AuthExitCodes.TOKEN_NOT_VALID);
                                 clientSocket.close();
                                 return;
                             }
-                            PreparedStatement dataFromTokenPS = sqlDB.prepareStatement("SELECT * FROM users WHERE current_token = ?;");
+                            PreparedStatement dataFromTokenPS = sqlDB.prepareStatement("SELECT * FROM users WHERE current_token = ? AND email = ?;");
                             dataFromTokenPS.setString(1, token);
+                            dataFromTokenPS.setString(2, email);
 
                             ResultSet data = dataFromTokenPS.executeQuery();
 
@@ -75,25 +81,28 @@ public class Server {
                                     Timestamp expireTime = data.getTimestamp("token_expire_date");
                                     if (expireTime.getTime() < System.currentTimeMillis()){
                                         System.out.println("token expired");
-                                        PreparedStatement setCurrentTokenToNullPS = sqlDB.prepareStatement("UPDATE users SET current_token = NULL WHERE current_token = ?;");
-                                        setCurrentTokenToNullPS.setString(1, token);
+                                        PreparedStatement setCurrentTokenToNullPS = sqlDB.prepareStatement("UPDATE users SET current_token = NULL WHERE email = ?;");
+                                        setCurrentTokenToNullPS.setString(1, email);
                                         setCurrentTokenToNullPS.executeUpdate();
-
 
                                         output.writeInt(AuthExitCodes.TOKEN_EXPIRED_ERROR);
                                         clientSocket.close();
                                         return;
                                     } else {
                                         // Logged in with token
-                                        if (connections.containsKey(data.getString("uuid"))){
+                                        if (connections.containsKey(UUID.fromString(data.getString("uuid")))){
                                             output.writeInt(AuthExitCodes.ALREADY_LOGGED_IN);
-                                            clientSocket.close();
-                                            return;
+                                            PacketManager.sendTo(connections.get(UUID.fromString(data.getString("uuid"))), 3);
+                                            connections.get(UUID.fromString(data.getString("uuid"))).close();
+                                            connections.remove(UUID.fromString(data.getString("uuid")));
+                                            connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
+
+                                        } else {
+                                            connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
+                                            output.writeInt(AuthExitCodes.SUCCESS);
                                         }
 
-                                        connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
-
-                                        output.writeInt(AuthExitCodes.SUCCESS);
+                                        System.out.println("SUCCESS!");
 
                                         eventManager.subscribe(clientSocket);
                                         PacketManager packetManager = new PacketManager(this.serverSocket, sqlDB, clientSocket, UUID.fromString(data.getString("uuid")), eventManager);
@@ -141,26 +150,29 @@ public class Server {
 
                                 System.out.println("password's right!");
                                 // Logged in successfully
-                                String newToken = "";
-                                if (data.getString("current_token") == null){
-                                    newToken = Hasher.randomString(32);
-                                    Timestamp date = new Timestamp(System.currentTimeMillis() + 1000L * 60 * 60 * 24);
+                                String newToken = Hasher.randomString(32);
+                                Timestamp date = new Timestamp(System.currentTimeMillis() + 1000L * 60 * 60 * 24);
 
-
-                                    PreparedStatement updateTokenPS = sqlDB.prepareStatement("UPDATE users SET current_token = ? AND token_expire_date = ? WHERE uuid = ?;");
-                                    updateTokenPS.setString(1, newToken);
-                                    updateTokenPS.setTimestamp(2, date);
-                                    updateTokenPS.setString(3, data.getString("uuid"));
-                                }
+                                PreparedStatement updateTokenPS = sqlDB.prepareStatement("UPDATE users SET current_token = ? WHERE uuid = ?;");
+                                updateTokenPS.setString(1, newToken);
+                                updateTokenPS.setString(2, data.getString("uuid"));
+                                updateTokenPS.executeUpdate();
+                                PreparedStatement updateDatePS = sqlDB.prepareStatement("UPDATE users SET token_expire_date = ? WHERE uuid = ?;");
+                                updateDatePS.setTimestamp(1, date);
+                                updateDatePS.setString(2, data.getString("uuid"));
+                                updateDatePS.executeUpdate();
                                 if (connections.containsKey(data.getString("uuid"))){
                                     output.writeInt(AuthExitCodes.ALREADY_LOGGED_IN);
                                     clientSocket.close();
                                     return;
                                 }
                                 connections.put(UUID.fromString(data.getString("uuid")), clientSocket);
+                                System.out.println("new TOKEN: "+ newToken);
+                                System.out.println("username: "+ data.getString("username"));
 
                                 output.writeInt(AuthExitCodes.SUCCESS);
                                 output.writeUTF(newToken);
+                                output.writeUTF(data.getString("username"));
 
                                 eventManager.subscribe(clientSocket);
                                 PacketManager packetManager = new PacketManager(this.serverSocket, sqlDB, clientSocket, UUID.fromString(data.getString("uuid")), eventManager);
@@ -192,7 +204,9 @@ public class Server {
                             String username = input.readUTF();
                             String email = input.readUTF();
                             String password = input.readUTF();
-
+                            System.out.println("UNAME: " + username);
+                            System.out.println("EMAIL: " + email);
+                            System.out.println("password: " + password);
                             // Statements for checking if email or username are taken
                             PreparedStatement emailPS = sqlDB.prepareStatement("SELECT * FROM users WHERE email = ?;");
                             PreparedStatement usernamePS = sqlDB.prepareStatement("SELECT * FROM users WHERE hashed_password = ?;");
