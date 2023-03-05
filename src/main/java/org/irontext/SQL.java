@@ -60,16 +60,13 @@ public class SQL {
         }
     }
 
-
-
     private Connection getConnection(){
-        String url = "jdbc:mysql://localhost:3306/messagingappdb";
+        String url = "jdbc:mysql://localhost:3306/mydb";
 
-        String uname = "root";
+        String uname = "user";
         String password = "password";
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-
 
             return DriverManager.getConnection(url, uname, password);
         }
