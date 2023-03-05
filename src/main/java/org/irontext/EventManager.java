@@ -25,6 +25,11 @@ public class EventManager {
 
 
 	public void subscribe(Socket subscriber){
+		for (Socket subscriber2 : subscribers){
+			if (subscriber2.getInetAddress() == subscriber.getInetAddress()){
+				subscribers.remove(subscriber2);
+			}
+		}
 		if (subscriber.isClosed()) {
 			subscribers.remove(subscriber);
 			return;
@@ -40,8 +45,10 @@ public class EventManager {
 			try {
 				DataOutputStream output = new DataOutputStream(subscriber.getOutputStream());
 				output.writeInt(requestType);
+				System.out.println("REQTYPE:" + requestType);
 				for (Object data : dataList){
 					if (data instanceof String || data instanceof UUID){
+						System.out.println("DATA: " + data.toString());
 						output.writeUTF(data.toString());
 					} else if (data instanceof Integer) {
 						output.writeInt(((Integer) data));
@@ -52,6 +59,7 @@ public class EventManager {
 					}
 				}
 			} catch (IOException e){
+				new Thread(()->unSubscribe(subscriber)).start();
 				e.printStackTrace();
 			}
 		}
