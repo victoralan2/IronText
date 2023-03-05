@@ -103,9 +103,9 @@ public class Hasher {
     }
 
     public static String randomString(int length){
-        char[] characters = "abcdefghijklmnoñpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
+        char[] characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
         String randomString = "";
-        SecureRandom random = new SecureRandom();
+        Random random = new Random(new ExtremeRandom().nextInt());
         for (int i = 0; i < length; i++) {
             randomString+= characters[random.nextInt(characters.length)];
         }
